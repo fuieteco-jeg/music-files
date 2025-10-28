@@ -1432,10 +1432,10 @@ generatePlaylist: function() {
     
     for (let i = 1; i <= totalTracks; i++) {
         const trackName = trackNames[i - 1] || `Христианская музыка ${i}`;
-        this.playlist.push({
+ this.playlist.push({
             title: trackName,
             artist: "AIGodsmusic",
-           src: `https://raw.githubusercontent.com/fuieteco-jeg/music-files/music/${i}.mp3`
+            src: `music/${i}.mp3`,
             duration: "0:00"
         });
     }
