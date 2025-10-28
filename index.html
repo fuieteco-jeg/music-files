@@ -1364,49 +1364,49 @@
 </footer>
 
     <script>
-        // Мобильное меню
-        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-        const mainNav = document.getElementById('mainNav');
-        
-        mobileMenuBtn.addEventListener('click', () => {
-            mainNav.classList.toggle('active');
-            mobileMenuBtn.innerHTML = mainNav.classList.contains('active') 
-                ? '<i class="fas fa-times"></i>' 
-                : '<i class="fas fa-bars"></i>';
-        });
+    // Мобильное меню
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mainNav = document.getElementById('mainNav');
+    
+    mobileMenuBtn.addEventListener('click', () => {
+        mainNav.classList.toggle('active');
+        mobileMenuBtn.innerHTML = mainNav.classList.contains('active') 
+            ? '<i class="fas fa-times"></i>' 
+            : '<i class="fas fa-bars"></i>';
+    });
 
-        // Изменение шапки при прокрутке
-        const header = document.getElementById('header');
-        
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 100) {
-                header.classList.add('scrolled');
-            } else {
-                header.classList.remove('scrolled');
-            }
-        });
+    // Изменение шапки при прокрутке
+    const header = document.getElementById('header');
+    
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 100) {
+            header.classList.add('scrolled');
+        } else {
+            header.classList.remove('scrolled');
+        }
+    });
 
-        // Аудиоплеер
-        const audioPlayer = {
-            // Данные плейлиста будут заполнены автоматически
-            playlist: [],
-            currentTrackIndex: 0,
-            audio: new Audio(),
-            isPlaying: false,
-            isShuffled: false,
-            isMuted: false,
-            repeatMode: 0,
-            isDraggingProgress: false,
-            isDraggingVolume: false,
-            isPlaylistCollapsed: false,
-            userInteracted: false, // Флаг, что пользователь взаимодействовал с плеером
-                    
-          // Автоматическое создание плейлиста с реальными названиями
+    // Аудиоплеер
+    const audioPlayer = {
+        // Данные плейлиста будут заполнены автоматически
+        playlist: [],
+        currentTrackIndex: 0,
+        audio: new Audio(),
+        isPlaying: false,
+        isShuffled: false,
+        isMuted: false,
+        repeatMode: 0,
+        isDraggingProgress: false,
+        isDraggingVolume: false,
+        isPlaylistCollapsed: false,
+        userInteracted: false, // Флаг, что пользователь взаимодействовал с плеером
+                
+      // Автоматическое создание плейлиста с реальными названиями
 generatePlaylist: function() {
     const totalTracks = 77;
     this.playlist = [];
     
-    // Предполагаемые названия треков (замените на реальные)
+    // Предполагаемые названия треков
     const trackNames = [
         "Angels' Symphony", "Are You Ready to Follow Him", "Bad Girl Turned Good", "Behind the Mask",
         "God is always near no need for fear", "Mask of a Happy Soul", "Never Give Up", "Never Say You Can't",
@@ -1432,505 +1432,541 @@ generatePlaylist: function() {
     
     for (let i = 1; i <= totalTracks; i++) {
         const trackName = trackNames[i - 1] || `Христианская музыка ${i}`;
- this.playlist.push({
+        this.playlist.push({
             title: trackName,
             artist: "AIGodsmusic",
-            src: `music/${i}.mp3`,
+            src: `https://raw.githubusercontent.com/fuieteco-jeg/music-files/main/music/${i}.mp3`,
             duration: "0:00"
         });
     }
 },
-                    
-            // Инициализация плеера
-            init: function() {
-                this.generatePlaylist();
-                this.audio.volume = 0.8;
-                this.loadTrack(this.currentTrackIndex);
-                this.renderPlaylist();
-                this.setupEventListeners();
                 
-                // Обработчик для первого взаимодействия пользователя
-                document.addEventListener('click', () => {
-                    this.userInteracted = true;
-                }, { once: true });
-            },
-                    
-            // Загрузка трека
-            loadTrack: function(index) {
-                const track = this.playlist[index];
+        // Инициализация плеера
+        init: function() {
+            this.generatePlaylist();
+            this.audio.volume = 0.8;
+            // НЕ загружаем трек автоматически при инициализации
+            this.renderPlaylist();
+            this.setupEventListeners();
+            
+            // Обработчик для первого взаимодействия пользователя
+            document.addEventListener('click', () => {
+                this.userInteracted = true;
+            }, { once: true });
+        },
+                
+        // Загрузка трека
+        loadTrack: function(index) {
+            const track = this.playlist[index];
+            
+            // Сначала останавливаем текущее воспроизведение
+            this.audio.pause();
+            this.audio.src = '';
+            
+            // Обновление информации о треке
+            document.querySelector('.track-title').textContent = track.title;
+            document.querySelector('.track-artist').textContent = track.artist;
+            document.querySelector('.total-time').textContent = track.duration;
+            
+            // Обновление активного элемента плейлиста
+            const playlistItems = document.querySelectorAll('.playlist-item');
+            if (playlistItems.length > 0) {
+                playlistItems.forEach(item => item.classList.remove('active'));
+                if (playlistItems[index]) {
+                    playlistItems[index].classList.add('active');
+                }
+            }
+            
+            // Сброс прогресса
+            document.querySelector('.current-time').textContent = '0:00';
+            document.getElementById('progress').style.width = '0%';
+            
+            // Устанавливаем источник только когда пользователь решит воспроизвести
+            this.currentTrackIndex = index;
+        },
+                
+        // Воспроизведение/пауза
+        togglePlay: function() {
+            if (!this.userInteracted) {
+                console.log("Пожалуйста, сначала выберите трек из списка");
+                return;
+            }
+            
+            const track = this.playlist[this.currentTrackIndex];
+            
+            if (!this.audio.src) {
+                // Загружаем трек только при первом воспроизведении
                 this.audio.src = track.src;
+            }
+            
+            if (this.isPlaying) {
+                this.pause();
+            } else {
+                this.play();
+            }
+        },
                 
-                // Обновление информации о треке
-                document.querySelector('.track-title').textContent = track.title;
-                document.querySelector('.track-artist').textContent = track.artist;
-                document.querySelector('.total-time').textContent = track.duration;
-                
-                // Обновление активного элемента плейлиста
-                const playlistItems = document.querySelectorAll('.playlist-item');
-                if (playlistItems.length > 0) {
-                    playlistItems.forEach(item => item.classList.remove('active'));
-                    if (playlistItems[index]) {
-                        playlistItems[index].classList.add('active');
-                    }
-                }
-                
-                // Сброс прогресса
-                document.querySelector('.current-time').textContent = '0:00';
-                document.getElementById('progress').style.width = '0%';
-                
-                // Обновление длительности при загрузке метаданных
-                this.audio.addEventListener('loadedmetadata', () => {
-                    const duration = this.audio.duration;
-                    if (isFinite(duration)) {
-                        const minutes = Math.floor(duration / 60);
-                        const seconds = Math.floor(duration % 60);
-                        const formattedDuration = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-                        
-                        // Обновляем длительность в плейлисте
-                        this.playlist[index].duration = formattedDuration;
-                        document.querySelector('.total-time').textContent = formattedDuration;
-                        
-                        // Обновляем отображение в плейлисте
-                        const durationElements = document.querySelectorAll('.track-duration');
-                        if (durationElements[index]) {
-                            durationElements[index].textContent = formattedDuration;
+        // Воспроизведение
+        play: function() {
+            if (!this.audio.src) {
+                const track = this.playlist[this.currentTrackIndex];
+                this.audio.src = track.src;
+            }
+            
+            const playPromise = this.audio.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    // Успешное воспроизведение
+                    this.isPlaying = true;
+                    document.getElementById('playBtn').innerHTML = '<i class="fas fa-pause"></i>';
+                    
+                    // Обновляем длительность при загрузке метаданных
+                    this.audio.addEventListener('loadedmetadata', () => {
+                        const duration = this.audio.duration;
+                        if (isFinite(duration)) {
+                            const minutes = Math.floor(duration / 60);
+                            const seconds = Math.floor(duration % 60);
+                            const formattedDuration = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                            
+                            // Обновляем длительность в плейлисте
+                            this.playlist[this.currentTrackIndex].duration = formattedDuration;
+                            document.querySelector('.total-time').textContent = formattedDuration;
+                            
+                            // Обновляем отображение в плейлисте
+                            const durationElements = document.querySelectorAll('.track-duration');
+                            if (durationElements[this.currentTrackIndex]) {
+                                durationElements[this.currentTrackIndex].textContent = formattedDuration;
+                            }
                         }
-                    }
-                }, { once: true });
-                
-                // Сбрасываем состояние воспроизведения при загрузке нового трека
-                this.isPlaying = false;
-                document.getElementById('playBtn').innerHTML = '<i class="fas fa-play"></i>';
-            },
+                    }, { once: true });
                     
-            // Воспроизведение/пауза
-            togglePlay: function() {
-                if (!this.userInteracted) {
-                    console.log("Пожалуйста, сначала выберите трек из списка");
-                    return;
-                }
-                
-                if (this.isPlaying) {
-                    this.pause();
-                } else {
-                    this.play();
-                }
-            },
+                }).catch(error => {
+                    // Ошибка воспроизведения
+                    console.log("Ошибка воспроизведения:", error);
+                    this.isPlaying = false;
+                    document.getElementById('playBtn').innerHTML = '<i class="fas fa-play"></i>';
                     
-            // Воспроизведение
-            play: function() {
-                if (!this.audio.src) {
-                    this.loadTrack(this.currentTrackIndex);
-                }
+                    // Показываем сообщение пользователю
+                    alert("Не удалось воспроизвести трек. Пожалуйста, попробуйте другой трек или проверьте подключение к интернету.");
+                });
+            }
+        },
                 
-                const playPromise = this.audio.play();
+        // Пауза
+        pause: function() {
+            this.audio.pause();
+            this.isPlaying = false;
+            document.getElementById('playBtn').innerHTML = '<i class="fas fa-play"></i>';
+        },
                 
-                if (playPromise !== undefined) {
-                    playPromise.then(() => {
-                        // Успешное воспроизведение
-                        this.isPlaying = true;
-                        document.getElementById('playBtn').innerHTML = '<i class="fas fa-pause"></i>';
-                    }).catch(error => {
-                        // Ошибка воспроизведения (скорее всего политика автоплея)
-                        console.log("Воспроизведение заблокировано:", error);
-                        this.isPlaying = false;
-                        document.getElementById('playBtn').innerHTML = '<i class="fas fa-play"></i>';
-                    });
-                }
-            },
-                    
-            // Пауза
-            pause: function() {
-                this.audio.pause();
-                this.isPlaying = false;
-                document.getElementById('playBtn').innerHTML = '<i class="fas fa-play"></i>';
-            },
-                    
-            // Следующий трек
-            nextTrack: function() {
-                if (this.isShuffled) {
-                    this.currentTrackIndex = Math.floor(Math.random() * this.playlist.length);
-                } else {
-                    this.currentTrackIndex = (this.currentTrackIndex + 1) % this.playlist.length;
-                }
-                this.loadTrack(this.currentTrackIndex);
-            },
-                    
-            // Предыдущий трек
-            prevTrack: function() {
-                if (this.isShuffled) {
-                    this.currentTrackIndex = Math.floor(Math.random() * this.playlist.length);
-                } else {
-                    this.currentTrackIndex = (this.currentTrackIndex - 1 + this.playlist.length) % this.playlist.length;
-                }
-                this.loadTrack(this.currentTrackIndex);
-            },
-                    
-            // Переключение режима повтора
-            toggleRepeat: function() {
-                this.repeatMode = (this.repeatMode + 1) % 3;
-                const repeatBtn = document.getElementById('repeatBtn');
+        // Следующий трек
+        nextTrack: function() {
+            if (this.isShuffled) {
+                this.currentTrackIndex = Math.floor(Math.random() * this.playlist.length);
+            } else {
+                this.currentTrackIndex = (this.currentTrackIndex + 1) % this.playlist.length;
+            }
+            this.loadTrack(this.currentTrackIndex);
+            // Автоматически воспроизводим следующий трек, если уже играл предыдущий
+            if (this.isPlaying) {
+                this.audio.src = ''; // Сбрасываем источник
+                this.play();
+            }
+        },
                 
-                switch(this.repeatMode) {
-                    case 0:
-                        repeatBtn.style.color = '';
-                        repeatBtn.innerHTML = '<i class="fas fa-redo"></i>';
-                        break;
-                    case 1:
-                        repeatBtn.style.color = 'var(--primary)';
-                        repeatBtn.innerHTML = '<i class="fas fa-redo"></i>';
-                        break;
-                    case 2:
-                        repeatBtn.style.color = 'var(--primary)';
-                        repeatBtn.innerHTML = '<i class="fas fa-infinity"></i>';
-                        break;
-                }
-            },
-                    
-            // Переключение режима перемешивания
-            toggleShuffle: function() {
-                this.isShuffled = !this.isShuffled;
-                const shuffleBtn = document.getElementById('shuffleBtn');
+        // Предыдущий трек
+        prevTrack: function() {
+            if (this.isShuffled) {
+                this.currentTrackIndex = Math.floor(Math.random() * this.playlist.length);
+            } else {
+                this.currentTrackIndex = (this.currentTrackIndex - 1 + this.playlist.length) % this.playlist.length;
+            }
+            this.loadTrack(this.currentTrackIndex);
+            // Автоматически воспроизводим предыдущий трек, если уже играл
+            if (this.isPlaying) {
+                this.audio.src = ''; // Сбрасываем источник
+                this.play();
+            }
+        },
                 
-                if (this.isShuffled) {
-                    shuffleBtn.style.color = 'var(--primary)';
-                } else {
-                    shuffleBtn.style.color = '';
-                }
-            },
-                    
-            // Переключение режима беззвучного воспроизведения
-            toggleMute: function() {
-                this.isMuted = !this.isMuted;
-                const volumeBtn = document.getElementById('volumeBtn');
+        // Переключение режима повтора
+        toggleRepeat: function() {
+            this.repeatMode = (this.repeatMode + 1) % 3;
+            const repeatBtn = document.getElementById('repeatBtn');
+            
+            switch(this.repeatMode) {
+                case 0:
+                    repeatBtn.style.color = '';
+                    repeatBtn.innerHTML = '<i class="fas fa-redo"></i>';
+                    break;
+                case 1:
+                    repeatBtn.style.color = 'var(--primary)';
+                    repeatBtn.innerHTML = '<i class="fas fa-redo"></i>';
+                    break;
+                case 2:
+                    repeatBtn.style.color = 'var(--primary)';
+                    repeatBtn.innerHTML = '<i class="fas fa-infinity"></i>';
+                    break;
+            }
+        },
                 
-                if (this.isMuted) {
-                    this.audio.volume = 0;
-                    volumeBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
-                    document.getElementById('volumeProgress').style.width = '0%';
-                } else {
-                    this.audio.volume = this.volumeLevel || 0.8;
-                    volumeBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
-                    document.getElementById('volumeProgress').style.width = `${(this.volumeLevel || 0.8) * 100}%`;
-                }
-            },
-                    
-            // Переключение состояния плейлиста
-            togglePlaylist: function() {
-                this.isPlaylistCollapsed = !this.isPlaylistCollapsed;
-                const playlistContainer = document.getElementById('playlistContainer');
-                const playlistToggle = document.getElementById('playlistToggle');
+        // Переключение режима перемешивания
+        toggleShuffle: function() {
+            this.isShuffled = !this.isShuffled;
+            const shuffleBtn = document.getElementById('shuffleBtn');
+            
+            if (this.isShuffled) {
+                shuffleBtn.style.color = 'var(--primary)';
+            } else {
+                shuffleBtn.style.color = '';
+            }
+        },
                 
-                if (this.isPlaylistCollapsed) {
-                    playlistContainer.classList.add('collapsed');
-                    playlistToggle.style.color = 'var(--primary)';
-                } else {
-                    playlistContainer.classList.remove('collapsed');
-                    playlistToggle.style.color = '';
-                }
-            },
-                    
-            // Обновление прогресса воспроизведения
-            updateProgress: function() {
-                if (!this.isDraggingProgress && isFinite(this.audio.duration)) {
-                    const progress = (this.audio.currentTime / this.audio.duration) * 100;
-                    document.getElementById('progress').style.width = `${progress}%`;
-                    
-                    // Обновление времени
-                    const currentMinutes = Math.floor(this.audio.currentTime / 60);
-                    const currentSeconds = Math.floor(this.audio.currentTime % 60);
-                    document.querySelector('.current-time').textContent = 
-                        `${currentMinutes}:${currentSeconds < 10 ? '0' : ''}${currentSeconds}`;
-                }
-            },
-                    
-            // Перемотка
-            seek: function(e) {
-                if (!isFinite(this.audio.duration)) return;
+        // Переключение режима беззвучного воспроизведения
+        toggleMute: function() {
+            this.isMuted = !this.isMuted;
+            const volumeBtn = document.getElementById('volumeBtn');
+            
+            if (this.isMuted) {
+                this.audio.volume = 0;
+                volumeBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                document.getElementById('volumeProgress').style.width = '0%';
+            } else {
+                this.audio.volume = this.volumeLevel || 0.8;
+                volumeBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                document.getElementById('volumeProgress').style.width = `${(this.volumeLevel || 0.8) * 100}%`;
+            }
+        },
                 
-                const progressBar = document.getElementById('progressBar');
-                const clickX = e.offsetX;
-                const width = progressBar.clientWidth;
-                const duration = this.audio.duration;
+        // Переключение состояния плейлиста
+        togglePlaylist: function() {
+            this.isPlaylistCollapsed = !this.isPlaylistCollapsed;
+            const playlistContainer = document.getElementById('playlistContainer');
+            const playlistToggle = document.getElementById('playlistToggle');
+            
+            if (this.isPlaylistCollapsed) {
+                playlistContainer.classList.add('collapsed');
+                playlistToggle.style.color = 'var(--primary)';
+            } else {
+                playlistContainer.classList.remove('collapsed');
+                playlistToggle.style.color = '';
+            }
+        },
                 
-                const newTime = (clickX / width) * duration;
-                if (isFinite(newTime)) {
-                    this.audio.currentTime = newTime;
-                }
-            },
-                    
-            // Начало перетаскивания прогресса
-            startProgressDrag: function(e) {
-                if (!isFinite(this.audio.duration)) return;
+        // Обновление прогресса воспроизведения
+        updateProgress: function() {
+            if (!this.isDraggingProgress && isFinite(this.audio.duration) && this.audio.duration > 0) {
+                const progress = (this.audio.currentTime / this.audio.duration) * 100;
+                document.getElementById('progress').style.width = `${progress}%`;
                 
-                this.isDraggingProgress = true;
-                this.updateProgressOnDrag(e);
-                
-                const mouseMoveHandler = (e) => {
-                    this.updateProgressOnDrag(e);
-                };
-                
-                const mouseUpHandler = () => {
-                    this.isDraggingProgress = false;
-                    document.removeEventListener('mousemove', mouseMoveHandler);
-                    document.removeEventListener('mouseup', mouseUpHandler);
-                };
-                
-                document.addEventListener('mousemove', mouseMoveHandler);
-                document.addEventListener('mouseup', mouseUpHandler);
-            },
-                    
-            // Обновление прогресса при перетаскивании
-            updateProgressOnDrag: function(e) {
-                if (!isFinite(this.audio.duration)) return;
-                
-                const progressBar = document.getElementById('progressBar');
-                const rect = progressBar.getBoundingClientRect();
-                const clickX = e.clientX - rect.left;
-                const width = progressBar.clientWidth;
-                const duration = this.audio.duration;
-                
-                let progressPercent = (clickX / width) * 100;
-                progressPercent = Math.max(0, Math.min(100, progressPercent));
-                
-                document.getElementById('progress').style.width = `${progressPercent}%`;
-                
-                const newTime = (progressPercent / 100) * duration;
-                if (isFinite(newTime)) {
-                    this.audio.currentTime = newTime;
-                }
-                
+                // Обновление времени
                 const currentMinutes = Math.floor(this.audio.currentTime / 60);
                 const currentSeconds = Math.floor(this.audio.currentTime % 60);
                 document.querySelector('.current-time').textContent = 
                     `${currentMinutes}:${currentSeconds < 10 ? '0' : ''}${currentSeconds}`;
-            },
-                    
-            // Изменение громкости
-            setVolume: function(e) {
-                const volumeBar = document.getElementById('volumeBar');
-                const clickX = e.offsetX;
-                const width = volumeBar.clientWidth;
-                const volume = Math.max(0, Math.min(1, clickX / width));
-                
-                this.audio.volume = volume;
-                this.volumeLevel = volume;
-                document.getElementById('volumeProgress').style.width = `${volume * 100}%`;
-                
-                // Обновление иконки громкости
-                const volumeBtn = document.getElementById('volumeBtn');
-                if (volume === 0) {
-                    volumeBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
-                    this.isMuted = true;
-                } else {
-                    volumeBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
-                    this.isMuted = false;
-                }
-            },
-                    
-            // Начало перетаскивания громкости
-            startVolumeDrag: function(e) {
-                this.isDraggingVolume = true;
-                this.updateVolumeOnDrag(e);
-                
-                const mouseMoveHandler = (e) => {
-                    this.updateVolumeOnDrag(e);
-                };
-                
-                const mouseUpHandler = () => {
-                    this.isDraggingVolume = false;
-                    document.removeEventListener('mousemove', mouseMoveHandler);
-                    document.removeEventListener('mouseup', mouseUpHandler);
-                };
-                
-                document.addEventListener('mousemove', mouseMoveHandler);
-                document.addEventListener('mouseup', mouseUpHandler);
-            },
-                    
-            // Обновление громкости при перетаскивании
-            updateVolumeOnDrag: function(e) {
-                const volumeBar = document.getElementById('volumeBar');
-                const rect = volumeBar.getBoundingClientRect();
-                const clickX = e.clientX - rect.left;
-                const width = volumeBar.clientWidth;
-                const volume = Math.max(0, Math.min(1, clickX / width));
-                
-                this.audio.volume = volume;
-                this.volumeLevel = volume;
-                document.getElementById('volumeProgress').style.width = `${volume * 100}%`;
-                
-                // Обновление иконки громкости
-                const volumeBtn = document.getElementById('volumeBtn');
-                if (volume === 0) {
-                    volumeBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
-                    this.isMuted = true;
-                } else {
-                    volumeBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
-                    this.isMuted = false;
-                }
-            },
-                    
-            // Отображение плейлиста
-            renderPlaylist: function() {
-                const playlistElement = document.getElementById('playlist');
-                playlistElement.innerHTML = '';
-                
-                this.playlist.forEach((track, index) => {
-                    const li = document.createElement('li');
-                    li.className = `playlist-item ${index === this.currentTrackIndex ? 'active' : ''}`;
-                    li.innerHTML = `
-                        <div class="track-number">${index + 1}</div>
-                        <div class="track-info-small">
-                            <div class="track-title-small">${track.title}</div>
-                            <div class="track-artist-small">${track.artist}</div>
-                        </div>
-                        <div class="track-duration">${track.duration}</div>
-                    `;
-                    li.addEventListener('click', () => {
-                        this.userInteracted = true;
-                        this.currentTrackIndex = index;
-                        this.loadTrack(index);
-                    });
-                    playlistElement.appendChild(li);
-                });
-            },
-                    
-            // Настройка обработчиков событий
-            setupEventListeners: function() {
-                const self = this;
-                
-                // Кнопки управления
-                document.getElementById('playBtn').addEventListener('click', () => {
-                    self.userInteracted = true;
-                    self.togglePlay();
-                });
-                
-                document.getElementById('nextBtn').addEventListener('click', () => {
-                    self.userInteracted = true;
-                    self.nextTrack();
-                });
-                
-                document.getElementById('prevBtn').addEventListener('click', () => {
-                    self.userInteracted = true;
-                    self.prevTrack();
-                });
-                
-                document.getElementById('repeatBtn').addEventListener('click', () => {
-                    self.toggleRepeat();
-                });
-                
-                document.getElementById('shuffleBtn').addEventListener('click', () => {
-                    self.toggleShuffle();
-                });
-                
-                document.getElementById('volumeBtn').addEventListener('click', () => {
-                    self.toggleMute();
-                });
-                
-                document.getElementById('playlistToggle').addEventListener('click', () => {
-                    self.togglePlaylist();
-                });
-                
-                // Прогресс-бар - клик
-                document.getElementById('progressBar').addEventListener('click', (e) => {
-                    self.userInteracted = true;
-                    self.seek(e);
-                });
-                
-                // Прогресс-бар - перетаскивание
-                document.getElementById('progressBar').addEventListener('mousedown', (e) => {
-                    self.userInteracted = true;
-                    self.startProgressDrag(e);
-                });
-                
-                // Громкость - клик
-                document.getElementById('volumeBar').addEventListener('click', (e) => {
-                    self.setVolume(e);
-                });
-                
-                // Громкость - перетаскивание
-                document.getElementById('volumeBar').addEventListener('mousedown', (e) => {
-                    self.startVolumeDrag(e);
-                });
-                
-                // События аудио
-                this.audio.addEventListener('timeupdate', () => {
-                    self.updateProgress();
-                });
-                
-                this.audio.addEventListener('ended', () => {
-                    if (self.repeatMode === 1) {
-                        // Повтор трека
-                        self.audio.currentTime = 0;
-                        if (self.isPlaying) {
-                            self.play();
-                        }
-                    } else if (self.repeatMode === 2 || self.currentTrackIndex < self.playlist.length - 1) {
-                        // Повтор плейлиста или переход к следующему треку
-                        self.nextTrack();
-                        if (self.isPlaying) {
-                            self.play();
-                        }
-                    } else {
-                        // Конец плейлиста
-                        self.pause();
-                        self.audio.currentTime = 0;
-                    }
-                });
             }
-        };
-
-        // Инициализация плеера после загрузки DOM
-        document.addEventListener('DOMContentLoaded', function() {
-            audioPlayer.init();
+        },
+                
+        // Перемотка
+        seek: function(e) {
+            if (!isFinite(this.audio.duration) || this.audio.duration <= 0) return;
             
-            // Плавная прокрутка к якорям
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    
-                    const targetId = this.getAttribute('href');
-                    if (targetId === '#') return;
-                    
-                    const targetElement = document.querySelector(targetId);
-                    if (targetElement) {
-                        // Закрываем мобильное меню если открыто
-                        if (mainNav.classList.contains('active')) {
-                            mainNav.classList.remove('active');
-                            mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
-                        }
-                        
-                        window.scrollTo({
-                            top: targetElement.offsetTop - 100,
-                            behavior: 'smooth'
-                        });
-                    }
-                });
-            });
-
-            // Анимация появления элементов при прокрутке
-            const observerOptions = {
-                threshold: 0.1,
-                rootMargin: '0px 0px -50px 0px'
+            const progressBar = document.getElementById('progressBar');
+            const clickX = e.offsetX;
+            const width = progressBar.clientWidth;
+            const duration = this.audio.duration;
+            
+            const newTime = (clickX / width) * duration;
+            if (isFinite(newTime)) {
+                this.audio.currentTime = newTime;
+            }
+        },
+                
+        // Начало перетаскивания прогресса
+        startProgressDrag: function(e) {
+            if (!isFinite(this.audio.duration) || this.audio.duration <= 0) return;
+            
+            this.isDraggingProgress = true;
+            this.updateProgressOnDrag(e);
+            
+            const mouseMoveHandler = (e) => {
+                this.updateProgressOnDrag(e);
             };
-
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.style.opacity = '1';
-                        entry.target.style.transform = 'translateY(0)';
+            
+            const mouseUpHandler = () => {
+                this.isDraggingProgress = false;
+                document.removeEventListener('mousemove', mouseMoveHandler);
+                document.removeEventListener('mouseup', mouseUpHandler);
+            };
+            
+            document.addEventListener('mousemove', mouseMoveHandler);
+            document.addEventListener('mouseup', mouseUpHandler);
+        },
+                
+        // Обновление прогресса при перетаскивании
+        updateProgressOnDrag: function(e) {
+            if (!isFinite(this.audio.duration) || this.audio.duration <= 0) return;
+            
+            const progressBar = document.getElementById('progressBar');
+            const rect = progressBar.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const width = progressBar.clientWidth;
+            const duration = this.audio.duration;
+            
+            let progressPercent = (clickX / width) * 100;
+            progressPercent = Math.max(0, Math.min(100, progressPercent));
+            
+            document.getElementById('progress').style.width = `${progressPercent}%`;
+            
+            const newTime = (progressPercent / 100) * duration;
+            if (isFinite(newTime)) {
+                this.audio.currentTime = newTime;
+            }
+            
+            const currentMinutes = Math.floor(this.audio.currentTime / 60);
+            const currentSeconds = Math.floor(this.audio.currentTime % 60);
+            document.querySelector('.current-time').textContent = 
+                `${currentMinutes}:${currentSeconds < 10 ? '0' : ''}${currentSeconds}`;
+        },
+                
+        // Изменение громкости
+        setVolume: function(e) {
+            const volumeBar = document.getElementById('volumeBar');
+            const clickX = e.offsetX;
+            const width = volumeBar.clientWidth;
+            const volume = Math.max(0, Math.min(1, clickX / width));
+            
+            this.audio.volume = volume;
+            this.volumeLevel = volume;
+            document.getElementById('volumeProgress').style.width = `${volume * 100}%`;
+            
+            // Обновление иконки громкости
+            const volumeBtn = document.getElementById('volumeBtn');
+            if (volume === 0) {
+                volumeBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                this.isMuted = true;
+            } else {
+                volumeBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                this.isMuted = false;
+            }
+        },
+                
+        // Начало перетаскивания громкости
+        startVolumeDrag: function(e) {
+            this.isDraggingVolume = true;
+            this.updateVolumeOnDrag(e);
+            
+            const mouseMoveHandler = (e) => {
+                this.updateVolumeOnDrag(e);
+            };
+            
+            const mouseUpHandler = () => {
+                this.isDraggingVolume = false;
+                document.removeEventListener('mousemove', mouseMoveHandler);
+                document.removeEventListener('mouseup', mouseUpHandler);
+            };
+            
+            document.addEventListener('mousemove', mouseMoveHandler);
+            document.addEventListener('mouseup', mouseUpHandler);
+        },
+                
+        // Обновление громкости при перетаскивании
+        updateVolumeOnDrag: function(e) {
+            const volumeBar = document.getElementById('volumeBar');
+            const rect = volumeBar.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const width = volumeBar.clientWidth;
+            const volume = Math.max(0, Math.min(1, clickX / width));
+            
+            this.audio.volume = volume;
+            this.volumeLevel = volume;
+            document.getElementById('volumeProgress').style.width = `${volume * 100}%`;
+            
+            // Обновление иконки громкости
+            const volumeBtn = document.getElementById('volumeBtn');
+            if (volume === 0) {
+                volumeBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                this.isMuted = true;
+            } else {
+                volumeBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                this.isMuted = false;
+            }
+        },
+                
+        // Отображение плейлиста
+        renderPlaylist: function() {
+            const playlistElement = document.getElementById('playlist');
+            playlistElement.innerHTML = '';
+            
+            this.playlist.forEach((track, index) => {
+                const li = document.createElement('li');
+                li.className = `playlist-item ${index === this.currentTrackIndex ? 'active' : ''}`;
+                li.innerHTML = `
+                    <div class="track-number">${index + 1}</div>
+                    <div class="track-info-small">
+                        <div class="track-title-small">${track.title}</div>
+                        <div class="track-artist-small">${track.artist}</div>
+                    </div>
+                    <div class="track-duration">${track.duration}</div>
+                `;
+                li.addEventListener('click', () => {
+                    this.userInteracted = true;
+                    this.loadTrack(index);
+                    // Автоматически воспроизводим при клике на трек в плейлисте
+                    if (this.isPlaying) {
+                        this.audio.src = ''; // Сбрасываем источник
                     }
+                    this.play();
                 });
-            }, observerOptions);
+                playlistElement.appendChild(li);
+            });
+        },
+                
+        // Настройка обработчиков событий
+        setupEventListeners: function() {
+            const self = this;
+            
+            // Кнопки управления
+            document.getElementById('playBtn').addEventListener('click', () => {
+                self.userInteracted = true;
+                self.togglePlay();
+            });
+            
+            document.getElementById('nextBtn').addEventListener('click', () => {
+                self.userInteracted = true;
+                self.nextTrack();
+            });
+            
+            document.getElementById('prevBtn').addEventListener('click', () => {
+                self.userInteracted = true;
+                self.prevTrack();
+            });
+            
+            document.getElementById('repeatBtn').addEventListener('click', () => {
+                self.toggleRepeat();
+            });
+            
+            document.getElementById('shuffleBtn').addEventListener('click', () => {
+                self.toggleShuffle();
+            });
+            
+            document.getElementById('volumeBtn').addEventListener('click', () => {
+                self.toggleMute();
+            });
+            
+            document.getElementById('playlistToggle').addEventListener('click', () => {
+                self.togglePlaylist();
+            });
+            
+            // Прогресс-бар - клик
+            document.getElementById('progressBar').addEventListener('click', (e) => {
+                self.userInteracted = true;
+                self.seek(e);
+            });
+            
+            // Прогресс-бар - перетаскивание
+            document.getElementById('progressBar').addEventListener('mousedown', (e) => {
+                self.userInteracted = true;
+                self.startProgressDrag(e);
+            });
+            
+            // Громкость - клик
+            document.getElementById('volumeBar').addEventListener('click', (e) => {
+                self.setVolume(e);
+            });
+            
+            // Громкость - перетаскивание
+            document.getElementById('volumeBar').addEventListener('mousedown', (e) => {
+                self.startVolumeDrag(e);
+            });
+            
+            // События аудио
+            this.audio.addEventListener('timeupdate', () => {
+                self.updateProgress();
+            });
+            
+            this.audio.addEventListener('ended', () => {
+                if (self.repeatMode === 1) {
+                    // Повтор трека
+                    self.audio.currentTime = 0;
+                    if (self.isPlaying) {
+                        self.play();
+                    }
+                } else if (self.repeatMode === 2 || self.currentTrackIndex < self.playlist.length - 1) {
+                    // Повтор плейлиста или переход к следующему треку
+                    self.nextTrack();
+                    if (self.isPlaying) {
+                        self.play();
+                    }
+                } else {
+                    // Конец плейлиста
+                    self.pause();
+                    self.audio.currentTime = 0;
+                }
+            });
+            
+            // Обработка ошибок загрузки аудио
+            this.audio.addEventListener('error', (e) => {
+                console.error('Ошибка загрузки аудио:', e);
+                alert('Не удалось загрузить аудиофайл. Пожалуйста, попробуйте другой трек.');
+                self.isPlaying = false;
+                document.getElementById('playBtn').innerHTML = '<i class="fas fa-play"></i>';
+            });
+        }
+    };
 
-            // Наблюдаем за элементами для анимации
-            document.querySelectorAll('.genre-card-compact, .about-text, .symbol, .player-wrapper').forEach(el => {
-                el.style.opacity = '0';
-                el.style.transform = 'translateY(20px)';
-                el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-                observer.observe(el);
+    // Инициализация плеера после загрузки DOM
+    document.addEventListener('DOMContentLoaded', function() {
+        audioPlayer.init();
+        
+        // Плавная прокрутка к якорям
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') return;
+                
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    // Закрываем мобильное меню если открыто
+                    if (mainNav.classList.contains('active')) {
+                        mainNav.classList.remove('active');
+                        mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
+                    }
+                    
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 100,
+                        behavior: 'smooth'
+                    });
+                }
             });
         });
-    </script>
+
+        // Анимация появления элементов при прокрутке
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Наблюдаем за элементами для анимации
+        document.querySelectorAll('.genre-card-compact, .about-text, .symbol, .player-wrapper').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            observer.observe(el);
+        });
+    });
+</script>
 </body>
 </html>
